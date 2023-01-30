@@ -1,11 +1,15 @@
 import { Phrase } from '../types'
-import phrases from '../db/phrases.json'
+import connect from '../db/db'
 
 export default class PhraseService {
-  getPhrases = (): Phrase[] => phrases
+  getPhrases = async () => {
+    const db = await connect()
+    return await db.find().toArray()
+  }
 
-  getRandomPhrase = (): Phrase => {
-    const randomIndex = Math.floor(Math.random() * phrases.length)
-    return phrases[randomIndex]
+  getRandomPhrase = async () => {
+    const db = await connect()
+    const random = Math.floor(Math.random() * (await db.countDocuments()))
+    return db.find().limit(-1).skip(random).next()
   }
 }
