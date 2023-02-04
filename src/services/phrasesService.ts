@@ -5,9 +5,7 @@ import { Collection } from 'mongodb'
 export default class PhraseService {
   db: Collection<Document> = collections.phrases as Collection<Document>
 
-  getPhrases = async () => {
-    return await this.db.find().toArray()
-  }
+  getPhrases = async () => await this.db.find().toArray()
 
   getRandomPhrase = async () => {
     const random = Math.floor(Math.random() * (await this.db.countDocuments()))
