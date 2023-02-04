@@ -1,15 +1,16 @@
-import { Phrase } from '../types'
-import connect from '../db/db'
+import { collections } from '../db/db'
+import { Collection } from 'mongodb'
+
 
 export default class PhraseService {
+  db: Collection<Document> = collections.phrases as Collection<Document>
+
   getPhrases = async () => {
-    const db = await connect()
-    return await db.find().toArray()
+    return await this.db.find().toArray()
   }
 
   getRandomPhrase = async () => {
-    const db = await connect()
-    const random = Math.floor(Math.random() * (await db.countDocuments()))
-    return db.find().limit(-1).skip(random).next()
+    const random = Math.floor(Math.random() * (await this.db.countDocuments()))
+    return this.db.find().limit(-1).skip(random).next()
   }
 }

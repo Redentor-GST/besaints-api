@@ -11,12 +11,14 @@ router.get('/', (req, res) => {
 
 router.get('/all', (req, res) => {
   const phraseService = new PhraseService()
-  const phrases = phraseService.getPhrases()
-  res.send(phrases)
+  phraseService.getPhrases().then((phrases) => {
+    res.send(phrases)
+  })
 })
 
 router.get('/random', (req, res) => {
   const phraseService = new PhraseService()
-  const randomPhrase = phraseService.getRandomPhrase()
-  res.send(randomPhrase)
+  phraseService.getRandomPhrase().then((randomPhrase) => {
+    res.send(randomPhrase)
+  })
 })
