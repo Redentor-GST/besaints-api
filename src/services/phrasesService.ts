@@ -34,4 +34,16 @@ export default class PhraseService {
     )
     return stmt.all(date) as Phrase[]
   }
+
+  getDailyPhrase = (): Phrase | null => {
+    const today = new Date()
+    const month = String(today.getMonth() + 1).padStart(2, '0')
+    const day = String(today.getDate()).padStart(2, '0')
+    const dateString = `${month}-${day}`
+
+    const stmt = this.db.prepare(
+      'SELECT * FROM phrases WHERE date = ? LIMIT 1'
+    )
+    return stmt.get(dateString) as Phrase | null
+  }
 }

@@ -36,7 +36,7 @@ router.get('/:id', (req, res) => {
     }
 
     const phrase = phraseService.getPhraseById(id)
-    if (!phrase) {
+    if (phrase == null) {
       return res.status(404).json({ error: 'Phrase not found' })
     }
 
@@ -63,5 +63,17 @@ router.get('/date/:date', (req, res) => {
     return res.json(phrases)
   } catch (error) {
     return res.status(500).json({ error: 'Failed to fetch phrases by date' })
+  }
+})
+
+router.get('/daily', (req, res) => {
+  try {
+    const dailyPhrase = phraseService.getDailyPhrase()
+    if (dailyPhrase == null) {
+      return res.status(404).json({ error: 'No phrase found for today' })
+    }
+    return res.json(dailyPhrase)
+  } catch (error) {
+    return res.status(500).json({ error: 'Failed to fetch daily phrase' })
   }
 })

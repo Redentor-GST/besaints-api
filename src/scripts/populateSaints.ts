@@ -21,7 +21,7 @@ for (const [date, saintsForDate] of Object.entries(saintsData)) {
     saints.push({
       name: saint.saint,
       date,
-      description: saint.info,
+      description: saint.info
     })
   }
 }

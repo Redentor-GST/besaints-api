@@ -1,6 +1,6 @@
 import { getDatabase } from '../db/db'
-import { saints as saintsData } from '../db/saints'
 import { phrases } from '../db/phrases'
+import { saints as saintsData } from '../db/saints'
 
 interface SaintData {
   name: string
@@ -22,7 +22,7 @@ for (const [date, saintsForDate] of Object.entries(saintsData)) {
     saints.push({
       name: saint.saint,
       date,
-      description: saint.info,
+      description: saint.info
     })
   }
 }

@@ -27,7 +27,7 @@ router.get('/:id', (req, res) => {
     }
 
     const saint = saintsService.getSaintById(id)
-    if (!saint) {
+    if (saint == null) {
       return res.status(404).json({ error: 'Saint not found' })
     }
 
@@ -41,7 +41,7 @@ router.get('/name/:name', (req, res) => {
   try {
     const name = decodeURIComponent(req.params.name)
     const saint = saintsService.getSaintByName(name)
-    if (!saint) {
+    if (saint == null) {
       return res.status(404).json({ error: 'Saint not found' })
     }
     return res.json(saint)
