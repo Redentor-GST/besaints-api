@@ -1,4 +1,13 @@
 export interface Phrase {
-  text: string;
-  author: string;
+  id?: number
+  text: string
+  author: string
+  date?: string
+}
+
+export interface Saint {
+  id?: number
+  name: string
+  date?: string
+  description?: string
 }

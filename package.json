@@ -7,7 +7,10 @@
     "dev": "ts-node-dev src/index.ts",
     "test": "jest --verbose --silent=false --runInBand --detectOpenHandles --forceExit",
     "cov": "jest --verbose --silent=false --runInBand --detectOpenHandles --forceExit --coverage",
-    "lint": "ts-standard src/**/*.ts"
+    "lint": "ts-standard src/**/*.ts",
+    "populate": "ts-node src/scripts/populateDatabase.ts",
+    "populate-saints": "ts-node src/scripts/populateSaints.ts",
+    "populate-phrases": "ts-node src/scripts/populatePhrases.ts"
   },
   "eslintConfig": {
     "extends": "./node_modules/ts-standard/eslintrc.json",
@@ -31,9 +34,12 @@
     "typescript": "^4.9.4"
   },
   "dependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "better-sqlite3": "^12.4.1",
     "dotenv": "^16.0.3",
     "express": "4.18.2",
-    "mongodb": "^4.13.0"
+    "mongodb": "^4.13.0",
+    "sqlite3": "^5.1.7"
   },
   "jest": {
     "preset": "ts-jest",
