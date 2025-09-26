@@ -25,7 +25,7 @@ function initializeTables (): void {
     CREATE TABLE IF NOT EXISTS saints (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
-      date TEXT UNIQUE NOT NULL,
+      date TEXT NOT NULL,
       description TEXT
     )
   `)
