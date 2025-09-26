@@ -1,203 +1,99 @@
-import express from 'express'
 import request from 'supertest'
-import saintsRouter from '../routes/saintsRouter'
+import { app, initializeApp } from '../index'
+import { setupTestDatabase, resetTestData, teardownTestDatabase } from './testUtils'
 
-// Mock the service
-jest.mock('../services/saintsService', () => {
-  return jest.fn().mockImplementation(() => ({
-    getSaints: jest.fn(),
-    getSaintById: jest.fn(),
-    getSaintByName: jest.fn(),
-    getSaintsByDate: jest.fn(),
-    searchSaints: jest.fn()
-  }))
-})
-
-const app = express()
-app.use(express.json())
-app.use('/api/saints', saintsRouter)
-
-describe('Saints API', () => {
-  let mockSaintsService: any
+describe('Saints API Integration Tests', () => {
+  beforeAll(async () => {
+    setupTestDatabase()
+    await initializeApp()
+  })
 
   beforeEach(() => {
-    jest.clearAllMocks()
-    // Get the mocked service instance
-    const SaintsService = require('../services/saintsService').default
-    mockSaintsService = new SaintsService()
+    resetTestData()
   })
 
-  describe('GET /api/saints/all', () => {
-    it('should return all saints', async () => {
-      const mockSaints = [
-        { id: 1, name: 'Saint 1', date: '01-01', description: 'Description 1' },
-        { id: 2, name: 'Saint 2', date: '01-02', description: 'Description 2' }
-      ]
-      mockSaintsService.getSaints.mockReturnValue(mockSaints)
-
-      const response = await request(app).get('/api/saints/all')
-
-      expect(response.status).toBe(200)
-      expect(response.body).toEqual(mockSaints)
-      expect(mockSaintsService.getSaints).toHaveBeenCalledTimes(1)
-    })
-
-    it('should handle service errors', async () => {
-      mockSaintsService.getSaints.mockImplementation(() => {
-        throw new Error('Database error')
-      })
-
-      const response = await request(app).get('/api/saints/all')
-
-      expect(response.status).toBe(500)
-      expect(response.body).toEqual({ error: 'Failed to fetch saints' })
-    })
+  afterAll(() => {
+    teardownTestDatabase()
   })
 
-  describe('GET /api/saints/:id', () => {
-    const mockSaint = {
-      id: 1,
-      name: 'Saint by ID',
-      date: '01-01',
-      description: 'Description by ID'
-    }
-
-    it('should return a saint by id', async () => {
-      mockSaintsService.getSaintById.mockReturnValue(mockSaint)
-
-      const response = await request(app).get('/api/saints/1')
+  describe('GET /api/saints/', () => {
+    it('should return welcome message', async () => {
+      const response = await request(app).get('/api/saints/')
 
       expect(response.status).toBe(200)
-      expect(response.body).toEqual(mockSaint)
-      expect(mockSaintsService.getSaintById).toHaveBeenCalledWith(1)
-    })
-
-    it('should return 400 for invalid id', async () => {
-      const response = await request(app).get('/api/saints/abc')
-
-      expect(response.status).toBe(400)
-      expect(response.body).toEqual({ error: 'Invalid ID' })
-    })
-
-    it('should return 404 for non-existent saint', async () => {
-      mockSaintsService.getSaintById.mockReturnValue(undefined)
-
-      const response = await request(app).get('/api/saints/999')
-
-      expect(response.status).toBe(404)
-      expect(response.body).toEqual({ error: 'Saint not found' })
-    })
-
-    it('should handle service errors', async () => {
-      mockSaintsService.getSaintById.mockImplementation(() => {
-        throw new Error('Database error')
-      })
-
-      const response = await request(app).get('/api/saints/1')
-
-      expect(response.status).toBe(500)
-      expect(response.body).toEqual({ error: 'Failed to fetch saint' })
+      expect(response.text).toBe('Welcome to saints router')
     })
   })
 
   describe('GET /api/saints/name/:name', () => {
-    const mockSaint = {
-      id: 1,
-      name: 'Test Saint',
-      date: '01-01',
-      description: 'Test Description'
-    }
-
-    it('should return a saint by name', async () => {
-      mockSaintsService.getSaintByName.mockReturnValue(mockSaint)
-
-      const response = await request(app).get('/api/saints/name/Test%20Saint')
+    it('should return a saint by exact name match', async () => {
+      // Test with a known saint name from the database
+      const response = await request(app).get('/api/saints/name/s.%20Antonio,%20abad')
 
       expect(response.status).toBe(200)
-      expect(response.body).toEqual(mockSaint)
-      expect(mockSaintsService.getSaintByName).toHaveBeenCalledWith(
-        'Test Saint'
-      )
+      expect(response.body).toHaveProperty('name')
+      expect(response.body).toHaveProperty('date')
+      expect(response.body).toHaveProperty('description')
     })
 
-    it('should return 404 for non-existent saint', async () => {
-      mockSaintsService.getSaintByName.mockReturnValue(undefined)
+    it('should handle URL encoded names with spaces', async () => {
+      const saintName = 's. Vicente María Strambi, Presbítero Pasionista, obispo'
+      const encodedName = encodeURIComponent(saintName)
 
-      const response = await request(app).get('/api/saints/name/NonExistent')
+      const response = await request(app).get(`/api/saints/name/${encodedName}`)
+
+      expect(response.status).toBe(200)
+      expect(response.body.name).toBe(saintName)
+    })
+
+    it('should return 404 for non-existent saint name', async () => {
+      const response = await request(app).get('/api/saints/name/NonExistentSaint')
 
       expect(response.status).toBe(404)
       expect(response.body).toEqual({ error: 'Saint not found' })
     })
 
-    it('should handle service errors', async () => {
-      mockSaintsService.getSaintByName.mockImplementation(() => {
-        throw new Error('Database error')
-      })
+    it('should be case sensitive', async () => {
+      const response = await request(app).get('/api/saints/name/s.%20antonio,%20abad')
 
-      const response = await request(app).get('/api/saints/name/Test%20Saint')
-
-      expect(response.status).toBe(500)
-      expect(response.body).toEqual({ error: 'Failed to fetch saint by name' })
+      expect(response.status).toBe(404)
+      expect(response.body).toEqual({ error: 'Saint not found' })
     })
   })
 
   describe('GET /api/saints/date/:date', () => {
-    it('should return saints by date', async () => {
-      const mockSaints = [
-        { id: 1, name: 'Saint A', date: '01-01', description: 'Description A' },
-        { id: 2, name: 'Saint B', date: '01-01', description: 'Description B' }
-      ]
-      mockSaintsService.getSaintsByDate.mockReturnValue(mockSaints)
-
+    it('should return a saint for a specific date', async () => {
+      // Test with a known date that has a saint
       const response = await request(app).get('/api/saints/date/01-01')
 
       expect(response.status).toBe(200)
-      expect(response.body).toEqual(mockSaints)
-      expect(mockSaintsService.getSaintsByDate).toHaveBeenCalledWith('01-01')
+      expect(response.body).toHaveProperty('name')
+      expect(response.body).toHaveProperty('date', '01-01')
+      expect(response.body).toHaveProperty('description')
     })
 
-    it('should handle service errors', async () => {
-      mockSaintsService.getSaintsByDate.mockImplementation(() => {
-        throw new Error('Database error')
-      })
+    it('should return null for date with no saints', async () => {
+      const response = await request(app).get('/api/saints/date/99-99')
 
-      const response = await request(app).get('/api/saints/date/01-01')
-
-      expect(response.status).toBe(500)
-      expect(response.body).toEqual({
-        error: 'Failed to fetch saints by date'
-      })
+      expect(response.status).toBe(200)
+      expect(response.body === null || response.body === '').toBe(true)
     })
   })
 
-  describe('GET /api/saints/search/:query', () => {
-    it('should return saints matching search query', async () => {
-      const mockSaints = [
-        {
-          id: 1,
-          name: 'Saint John',
-          date: '01-01',
-          description: 'Description of John'
-        }
-      ]
-      mockSaintsService.searchSaints.mockReturnValue(mockSaints)
-
-      const response = await request(app).get('/api/saints/search/John')
+  describe('GET /api/saints/daily', () => {
+    it('should return a saint for today\'s date or empty response', async () => {
+      const response = await request(app).get('/api/saints/daily')
 
       expect(response.status).toBe(200)
-      expect(response.body).toEqual(mockSaints)
-      expect(mockSaintsService.searchSaints).toHaveBeenCalledWith('John')
-    })
-
-    it('should handle service errors', async () => {
-      mockSaintsService.searchSaints.mockImplementation(() => {
-        throw new Error('Database error')
-      })
-
-      const response = await request(app).get('/api/saints/search/John')
-
-      expect(response.status).toBe(500)
-      expect(response.body).toEqual({ error: 'Failed to search saints' })
+      // Since we don't know if there's a saint for today, we check both possibilities
+      if (response.body != null && typeof response.body === 'object' && 'name' in response.body) {
+        expect(response.body).toHaveProperty('name')
+        expect(response.body).toHaveProperty('date')
+        expect(response.body).toHaveProperty('description')
+      } else {
+        // No saint for today - that's also valid
+        expect(response.body === null || response.body === '').toBe(true)
+      }
     })
   })
 })

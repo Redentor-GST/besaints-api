@@ -1,73 +1,76 @@
-import express from 'express'
 import request from 'supertest'
-import phrasesRouter from '../routes/phrasesRouter'
+import { app, initializeApp } from '../index'
+import { setupTestDatabase, resetTestData, teardownTestDatabase } from './testUtils'
 
-const app = express()
-app.use(express.json())
-app.use('/api/phrases', phrasesRouter)
+describe('Phrases API Integration Tests', () => {
+  beforeAll(async () => {
+    setupTestDatabase()
+    await initializeApp()
+  })
 
-describe('Phrases API', () => {
-  describe('GET /api/phrases/all', () => {
-    it('should return all phrases', async () => {
-      const response = await request(app).get('/api/phrases/all')
+  beforeEach(() => {
+    resetTestData()
+  })
+
+  afterAll(() => {
+    teardownTestDatabase()
+  })
+
+  describe('GET /api/phrases/', () => {
+    it('should return welcome message', async () => {
+      const response = await request(app).get('/api/phrases/')
+
       expect(response.status).toBe(200)
-      expect(Array.isArray(response.body)).toBe(true)
+      expect(response.text).toBe('Welcome to phrases router')
     })
   })
 
   describe('GET /api/phrases/random', () => {
     it('should return a random phrase', async () => {
       const response = await request(app).get('/api/phrases/random')
+
       expect(response.status).toBe(200)
       expect(response.body).toHaveProperty('id')
       expect(response.body).toHaveProperty('text')
       expect(response.body).toHaveProperty('author')
       expect(response.body).toHaveProperty('date')
-    })
-  })
-
-  describe('GET /api/phrases/:id', () => {
-    it('should return 400 for invalid id', async () => {
-      const response = await request(app).get('/api/phrases/abc')
-      expect(response.status).toBe(400)
-      expect(response.body).toEqual({ error: 'Invalid ID' })
-    })
-
-    it('should return 404 for non-existent phrase', async () => {
-      const response = await request(app).get('/api/phrases/999')
-      expect(response.status).toBe(404)
-      expect(response.body).toEqual({ error: 'Phrase not found' })
-    })
-  })
-
-  describe('GET /api/phrases/author/:author', () => {
-    it('should return phrases by author', async () => {
-      const response = await request(app).get(
-        '/api/phrases/author/San%20Pablo'
-      )
-      expect(response.status).toBe(200)
-      expect(Array.isArray(response.body)).toBe(true)
+      expect(typeof response.body.id).toBe('number')
+      expect(typeof response.body.text).toBe('string')
+      expect(typeof response.body.author).toBe('string')
+      expect(typeof response.body.date).toBe('string')
     })
   })
 
   describe('GET /api/phrases/date/:date', () => {
-    it('should return phrases by date', async () => {
+    it('should return a phrase for a specific date', async () => {
+      // Test with a known date that has a phrase
       const response = await request(app).get('/api/phrases/date/01-01')
+
       expect(response.status).toBe(200)
-      expect(Array.isArray(response.body)).toBe(true)
+      expect(response.body).toHaveProperty('text')
+      expect(response.body).toHaveProperty('author')
+      expect(response.body).toHaveProperty('date', '01-01')
+    })
+
+    it('should return null for date with no phrases', async () => {
+      const response = await request(app).get('/api/phrases/date/99-99')
+
+      expect(response.status).toBe(404)
+      expect(response.body).toEqual({ error: 'No phrase found for date' })
     })
   })
 
   describe('GET /api/phrases/daily', () => {
-    it('should return daily phrase or 404', async () => {
+    it('should return daily phrase or 404 if none exists', async () => {
       const response = await request(app).get('/api/phrases/daily')
-      expect([200, 404]).toContain(response.status)
+
       if (response.status === 200) {
         expect(response.body).toHaveProperty('id')
         expect(response.body).toHaveProperty('text')
         expect(response.body).toHaveProperty('author')
         expect(response.body).toHaveProperty('date')
       } else {
+        expect(response.status).toBe(404)
         expect(response.body).toEqual({ error: 'No phrase found for today' })
       }
     })

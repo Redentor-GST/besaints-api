@@ -5,9 +5,11 @@ import { saints as saintsData } from './saints'
 
 let db: Database.Database | null = null
 
-export function getDatabase (): Database.Database {
+export function getDatabase (name?: string): Database.Database {
   if (db == null) {
-    const dbPath = path.join(process.cwd(), 'database.sqlite')
+    // Use environment variable to determine database name
+    const dbName = name ?? (process.env.NODE_ENV === 'test' ? 'test.sqlite' : 'database.sqlite')
+    const dbPath = path.join(process.cwd(), dbName)
     db = new Database(dbPath)
     initializeTables()
     ensureDatabasePopulated()
@@ -102,6 +104,18 @@ function populateDatabase (): void {
 
   populateTransaction()
   console.log('Database population completed successfully!')
+}
+
+export function closeDatabase (): void {
+  if (db != null) {
+    db.close()
+    db = null
+  }
+}
+
+export function resetDatabase (): void {
+  closeDatabase()
+  // The next call to getDatabase() will create a new connection
 }
 
 export default function connect (): Database.Database {

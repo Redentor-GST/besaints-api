@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "dev": "ts-node-dev src/index.ts",
-    "test": "jest --verbose --silent=false --runInBand --detectOpenHandles --forceExit",
-    "cov": "jest --verbose --silent=false --runInBand --detectOpenHandles --forceExit --coverage",
+    "test": "NODE_ENV=test jest --verbose --silent=false --runInBand --detectOpenHandles --forceExit",
+    "cov": "NODE_ENV=test jest --verbose --silent=false --runInBand --detectOpenHandles --forceExit --coverage",
     "lint": "ts-standard src/**/*.ts",
     "populate": "ts-node src/scripts/populateDatabase.ts",
     "populate-saints": "ts-node src/scripts/populateSaints.ts",
