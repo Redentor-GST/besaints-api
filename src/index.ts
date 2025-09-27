@@ -2,6 +2,7 @@ import express from 'express'
 import connect from './db/db'
 import phrasesRouter from './routes/phrasesRouter'
 import saintsRouter from './routes/saintsRouter'
+import userRouter from './routes/userRouter'
 
 export const app = express()
 app.use(express.json())
@@ -51,8 +52,9 @@ export async function initializeApp (): Promise<void> {
   await initializeDatabase()
 
   // Add routes
-  app.use('/api/phrases/', phrasesRouter)
-  app.use('/api/saints/', saintsRouter)
+  app.use('/phrases', phrasesRouter)
+  app.use('/saints', saintsRouter)
+  app.use('/user', userRouter)
 }
 
 // Start the server (only when not in test environment)

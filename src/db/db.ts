@@ -39,6 +39,18 @@ function initializeTables (): void {
       date TEXT UNIQUE NOT NULL
     )
   `)
+
+  // Create users table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      deviceId TEXT UNIQUE NOT NULL,
+      expoPushToken TEXT NOT NULL,
+      platform TEXT NOT NULL,
+      registeredAt INTEGER NOT NULL,
+      shouldReceiveNotifications BOOLEAN NOT NULL DEFAULT 1
+    )
+  `)
 }
 
 function ensureDatabasePopulated (): void {

@@ -1,5 +1,5 @@
 import fs from 'fs'
-import { closeDatabase, resetDatabase } from '../db/db'
+import { closeDatabase, resetDatabase, getDatabase } from '../db/db'
 
 export function setupTestDatabase (): void {
   // Ensure NODE_ENV is set to test
@@ -14,6 +14,10 @@ export function setupTestDatabase (): void {
 export function resetTestData (): void {
   // Reset database connection to get fresh data
   resetDatabase()
+
+  // Clear users table for clean test state
+  const db = getDatabase()
+  db.exec('DELETE FROM users')
 }
 
 export function teardownTestDatabase (): void {

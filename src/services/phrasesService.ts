@@ -31,7 +31,6 @@ export default class PhraseService {
   }
 
   getPhraseByDate = (date: string): Phrase | undefined => {
-    console.log({ date })
     const db = getDatabase()
     const stmt = db.prepare(
       'SELECT * FROM phrases WHERE date = ? LIMIT 1'
